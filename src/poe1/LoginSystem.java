@@ -1,73 +1,120 @@
-package poe1; /**testing*/
-import java.util.regex.Pattern;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/EmptyTestNGTest.java to edit this template
+ */
+package poe1;
+
+import static org.testng.Assert.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 /**
- *
- * @author RC_Student_lab
+ * Comprehensive tests for LoginSystem functionality
  */
-public class LoginSystem {
-    private String registeredUsername;
-    private String registeredPassword;
-    private String registeredCellPhone;
-    private String firstName;
-    private String lastName;
+public class LoginSystemNGTest {
     
-    // Check if username meets requirements
-    public Boolean checkUserName(String username) {
-        return username.contains("_") && username.length() <= 5;
-    }
+    private LoginSystem system;
     
-    // Check if password meets complexity requirements
-    public Boolean checkPasswordComplexity(String password) {
-        boolean hasUpperCase = !password.equals(password.toLowerCase());
-        boolean hasNumber = password.matches(".*\\d.*");
-        boolean hasSpecialChar = !password.matches("[A-Za-z0-9 ]*");
-        
-        return password.length() >= 8 && hasUpperCase && hasNumber && hasSpecialChar;
+    @BeforeMethod
+    public void setUpMethod() {
+        system = new LoginSystem();
     }
 
-    public Boolean checkCellPhoneNumber(String cellPhoneNumber) {
-        String regex = "^\\+27\\d{9}$";
-        return Pattern.matches(regex, cellPhoneNumber);
+    @AfterMethod
+    public void tearDownMethod() {
+        system = null;
     }
     
-    // Register a new user
-    public String registerUser(String username, String password, String cellPhoneNumber, 
-                              String firstName, String lastName) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        
-        if (!checkUserName(username)) {
-            return "Username is not correctly formatted, please ensure that your username contains an underscore and is no more than five characters in length.";
-        }
-        
-        if (!checkPasswordComplexity(password)) {
-            return "Password is not correctly formatted, please ensure that the password contains at least eight characters, a capital letter, a number, and a special character.";
-        }
-        
-        // FIX: Added cell phone number validation
-        if (!checkCellPhoneNumber(cellPhoneNumber)) {
-            return "Cell phone number is not correctly formatted; please ensure it includes the international country code (+27) and is 12 characters long (e.g., +27821234567).";
-        }
-        
-        this.registeredUsername = username;
-        this.registeredPassword = password;
-        this.registeredCellPhone = cellPhoneNumber;
-        
-        return "Username successfully captured.\nPassword successfully captured.\nCell phone number successfully captured.\nUser registered successfully!";
+    // ===== USERNAME VALIDATION TESTS =====
+    
+    @Test
+    public void testUsernameCorrectlyFormatted() {
+        assertTrue(system.checkUserName("kyl_1"));
     }
     
-    // Login user
-    public Boolean loginUser(String username, String password) {
-        return username.equals(registeredUsername) && password.equals(registeredPassword);
+    @Test
+    public void testUsernameIncorrectlyFormattedNoUnderscore() {
+        assertFalse(system.checkUserName("kyle!!!!!!!"));
     }
     
-    // Return login status message
-    public String returnLoginStatus(boolean isLoggedIn) {
-        if (isLoggedIn) {
-            return "Welcome " + firstName + ", " + lastName + " it is great to see you again.";
-        } else {
-            return "Username or password incorrect, please try again.";
-        }
+    @Test
+    public void testUsernameIncorrectlyFormattedTooLong() {
+        assertFalse(system.checkUserName("verylongusername"));
+    }
+    
+    // ===== PASSWORD COMPLEXITY TESTS =====
+    
+    @Test
+    public void testPasswordMeetsComplexityRequirements() {
+        assertTrue(system.checkPasswordComplexity("Ch&&sec@ke99!"));
+    }
+    
+    @Test
+    public void testPasswordDoesNotMeetComplexityRequirements() {
+        assertFalse(system.checkPasswordComplexity("password"));
+    }
+    
+    @Test
+    public void testPasswordNoCapital() {
+        assertFalse(system.checkPasswordComplexity("password1!"));
+    }
+    
+    @Test
+    public void testPasswordNoNumber() {
+        assertFalse(system.checkPasswordComplexity("Password!"));
+    }
+    
+    @Test
+    public void testPasswordNoSpecialChar() {
+        assertFalse(system.checkPasswordComplexity("Password1"));
+    }
+    
+    // ===== CELL PHONE VALIDATION TESTS =====
+    
+    @Test
+    public void testCellPhoneCorrectlyFormatted() {
+        assertTrue(system.checkCellPhoneNumber("+27835998701"));
+    }
+    
+    @Test
+    public void testCellPhoneIncorrectlyFormatted() {
+        assertFalse(system.checkCellPhoneNumber("00506553"));
+    }
+    
+    // ===== REGISTRATION TESTS =====
+    
+    @Test
+    public void testRegisterUserSuccess() {
+        String result = system.registerUser("user_", "Passw0rd!", "+27821234567", "John", "Doe");
+        assertTrue(result.contains("successfully"));
+    }
+    
+    @Test
+    public void testRegisterUserInvalidUsername() {
+        String result = system.registerUser("invalid", "Passw0rd!", "+27821234567", "John", "Doe");
+        assertTrue(result.contains("Username is not correctly formatted"));
+    }
+    
+    // ===== LOGIN TESTS =====
+    
+    @Test
+    public void testLoginSuccessful() {
+        system.registerUser("test_", "Passw0rd!", "+27821234567", "John", "Doe");
+        assertTrue(system.loginUser("test_", "Passw0rd!"));
+    }
+    
+    @Test
+    public void testLoginFailed() {
+        system.registerUser("test_", "Passw0rd!", "+27821234567", "John", "Doe");
+        assertFalse(system.loginUser("test_", "WrongPassword!"));
+    }
+    
+    @Test
+    public void testReturnLoginStatusSuccessful() {
+        system.registerUser("user_", "Passw0rd!", "+27821234567", "Onthatile", "Smith");
+        system.loginUser("user_", "Passw0rd!");
+        String expected = "Welcome Onthatile, Smith it is great to see you again.";
+        assertEquals(system.returnLoginStatus(true), expected);
     }
 }
